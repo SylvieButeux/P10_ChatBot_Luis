@@ -9,9 +9,9 @@ from booking_details import BookingDetails
 
 
 class Intent(Enum):
-    BOOK_FLIGHT = "BookFlight"
+    #BOOK_FLIGHT = "BookFlight"
+    BOOK_FLIGHT = "book"
     CANCEL = "Cancel"
-    GET_WEATHER = "GetWeather"
     NONE_INTENT = "NoneIntent"
 
 
@@ -26,15 +26,14 @@ def top_intent(intents: Dict[Intent, dict]) -> TopIntent:
 
     return TopIntent(max_intent, max_value)
 
-
+None
 class LuisHelper:
     @staticmethod
-    async def execute_luis_query(
-        luis_recognizer: LuisRecognizer, turn_context: TurnContext
-    ) -> (Intent, object):
-        """
-        Returns an object with preformatted LUIS results for the bot's dialogs to consume.
-        """
+    async def execute_luis_query(luis_recognizer: LuisRecognizer, turn_context: TurnContext    
+    ) -> (Intent , object):
+        #"""
+        #Returns an object with preformatted LUIS results for the bot's dialogs to consume.
+        #"""
         result = None
         intent = None
 
@@ -53,48 +52,71 @@ class LuisHelper:
 
             if intent == Intent.BOOK_FLIGHT.value:
                 result = BookingDetails()
-
+                print("book found",intent)
                 # We need to get the result from the LUIS JSON which at every level returns an array.
-                to_entities = recognizer_result.entities.get("$instance", {}).get(
-                    "To", []
-                )
-                if len(to_entities) > 0:
-                    if recognizer_result.entities.get("To", [{"$instance": {}}])[0][
-                        "$instance"
-                    ]:
-                        result.destination = to_entities[0]["text"].capitalize()
-                    else:
-                        result.unsupported_airports.append(
-                            to_entities[0]["text"].capitalize()
-                        )
 
-                from_entities = recognizer_result.entities.get("$instance", {}).get(
-                    "From", []
+################### ORIGIN CITY
+                origin_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "or_city", []
                 )
-                if len(from_entities) > 0:
-                    if recognizer_result.entities.get("From", [{"$instance": {}}])[0][
-                        "$instance"
-                    ]:
-                        result.origin = from_entities[0]["text"].capitalize()
-                    else:
-                        result.unsupported_airports.append(
-                            from_entities[0]["text"].capitalize()
-                        )
+                if len(origin_entities) > 0:
+                    result.origin = origin_entities[0]["text"].capitalize()
+                    print("result.origin              ok = ",result.origin)
+                else:
+                    result.origin = None
+                    print("result.origin               not found  ")
 
+
+################### DESTINATION CITY
+                dest_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "dst_city", []
+                )
+                if len(dest_entities) > 0:
+                    result.destination = dest_entities[0]["text"].capitalize()
+                    print("result.destination         ok = ",result.destination)
+                else:
+                    result.destination =None
+                    print("result.destination          not found  ")
+
+################### START DATE 
+                 
                 # This value will be a TIMEX. And we are only interested in a Date so grab the first result and drop
                 # the Time part. TIMEX is a format that represents DateTime expressions that include some ambiguity.
                 # e.g. missing a Year.
-                date_entities = recognizer_result.entities.get("datetime", [])
-                if date_entities:
-                    timex = date_entities[0]["timex"]
 
-                    if timex:
-                        datetime = timex[0].split("T")[0]
-
-                        result.travel_date = datetime
-
+                start_date_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "str_date", []
+                )
+                if len(start_date_entities) > 0:
+                    result.start_travel_date = start_date_entities[0]["text"].capitalize()
+                    print("result.start_travel_date   ok = ",result.start_travel_date)
                 else:
-                    result.travel_date = None
+                    result.start_travel_date =None
+                    print("result.start_travel_date   not found  ")
+
+################### END DATE 
+
+                end_date_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "end_date", []
+                )
+                if len(end_date_entities) > 0:
+                    result.end_travel_date = end_date_entities[0]["text"].capitalize()
+                    print("result.end_travel_date     ok = ", result.end_travel_date)
+                else:
+                    result.end_travel_date =None
+                    print("result.end_travel_date     not found  ")  
+
+ ################### BUDGET 
+                 
+                budget_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "budget", []
+                )
+                if len(budget_entities) > 0:
+                    result.budget = budget_entities[0]["text"].capitalize()
+                    print("result.budget              ok = ", result.budget)
+                else:
+                    result.budget =None
+                    print("result.budget               not found  ")                
 
         except Exception as exception:
             print(exception)

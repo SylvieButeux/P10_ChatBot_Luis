@@ -33,8 +33,8 @@ class BookingDialog(CancelAndHelpDialog):
             [
                 self.destination_step,
                 self.origin_step,
-                #self.start_travel_date_step,
-                #self.end_travel_date_step,
+                self.start_travel_date_step,
+                self.end_travel_date_step,
                 self.budget_step,
                 
 
@@ -102,9 +102,9 @@ class BookingDialog(CancelAndHelpDialog):
 
         # Capture the results of the previous step
         booking_details.origin = step_context.result
-        if not booking_details.start_travel_date or self.is_ambiguous(
-            booking_details.start_travel_date
-        ):
+        # if not booking_details.start_travel_date or self.is_ambiguous(
+        #    booking_details.start_travel_date
+        if not booking_details.start_travel_date :
             return await step_context.begin_dialog(
                 DateResolverDialog.__name__, booking_details.start_travel_date
             )  # pylint: disable=line-too-long
@@ -121,9 +121,11 @@ class BookingDialog(CancelAndHelpDialog):
 
         # Capture the results of the previous step
         booking_details.start_travel_date = step_context.result
-        if not booking_details.end_travel_date or self.is_ambiguous(
-            booking_details.end_travel_date
-        ):
+        #if not booking_details.end_travel_date or self.is_ambiguous(
+        #    booking_details.end_travel_date
+        #):
+
+        if not booking_details.end_travel_date :
             return await step_context.begin_dialog(
                 DateResolverDialog.__name__, booking_details.end_travel_date
             )  # pylint: disable=line-too-long
@@ -135,14 +137,15 @@ class BookingDialog(CancelAndHelpDialog):
         booking_details = step_context.options
         print(" ------- BUDGET STEP IN ------- ")
         # Capture the response to the previous step's prompt
-        # ATTENTION A ENABLER QD JE REMETS LES DATES
-        #  booking_details.end_travel_date = step_context.result
-        booking_details.origin = step_context.result
+        # ATTENTION A ENABLER TEST SANS LES DATES
+        #booking_details.origin = step_context.result
+        # TEST AVEC LES DATES 
+        booking_details.end_travel_date = step_context.result
         if booking_details.budget is None:
             return await step_context.prompt(
                 TextPrompt.__name__,
                 PromptOptions(
-                    prompt=MessageFactory.text("From what city will you be travelling?")
+                    prompt=MessageFactory.text("what is your budget for this trip?")
                 ),
             )  # pylint: disable=line-too-long,bad-continuation
 
@@ -162,7 +165,7 @@ class BookingDialog(CancelAndHelpDialog):
         # modifiction du message pour notre cas
         msg = (
             f"Please confirm, I have you traveling: \n"
-            f"from: { booking_details.destination } to { booking_details.origin }\n" 
+            f"from: { booking_details.origin } to { booking_details.destination }\n" 
             f"begin on { booking_details.start_travel_date} and ending on { booking_details.end_travel_date}\n"
             f"with a budget of: { booking_details.budget}"
                )

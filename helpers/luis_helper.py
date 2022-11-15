@@ -10,7 +10,7 @@ from booking_details import BookingDetails
 
 class Intent(Enum):
     #BOOK_FLIGHT = "BookFlight"
-    BOOK_FLIGHT = "book"
+    BOOK_FLIGHT = "book"   # NOTRE INTENT 
     CANCEL = "Cancel"
     NONE_INTENT = "NoneIntent"
 
@@ -36,6 +36,8 @@ class LuisHelper:
         #"""
         result = None
         intent = None
+        
+        #turn_context._activity.text= "Hi I'd like to go to Caprica from Busan, between Sunday August 21, 2016 and Wednesday August 31, 2016 with 1500$"
 
         try:
             recognizer_result = await luis_recognizer.recognize(turn_context)
@@ -78,11 +80,9 @@ class LuisHelper:
                     result.destination =None
                     print("result.destination          not found  ")
 
-################### START DATE 
+################### START DATE TXT
                  
-                # This value will be a TIMEX. And we are only interested in a Date so grab the first result and drop
-                # the Time part. TIMEX is a format that represents DateTime expressions that include some ambiguity.
-                # e.g. missing a Year.
+               
 
                 start_date_entities = recognizer_result.entities.get("$instance", {}).get(
                     "str_date", []
@@ -105,7 +105,39 @@ class LuisHelper:
                 else:
                     result.end_travel_date =None
                     print("result.end_travel_date     not found  ")  
+ 
+###################  DATE START STOP
 
+                tmp_start = None
+                tmp_end = None
+
+                date_entities = recognizer_result.entities.get("datetime", {})
+                if date_entities:
+                    if len(date_entities) > 0:
+                        timex = date_entities[0]["timex"]
+                        
+                        # format range 
+                        if date_entities[0]["type"] == "daterange":
+                            print("timex =",timex[0])
+                            datetime_value = timex[0].replace("(", "").replace(")", "").split(",")
+                            tmp_start = datetime_value[0]
+                            tmp_end = datetime_value[1]
+                        
+                        # format date unique
+                        elif date_entities[0]["type"] == "date":
+                            if(result.start_travel_date!=None):  # on verifie si le text orgine a ete detecte precedament
+                                tmp_start = timex[0]
+                            elif(result.end_travel_date!=None):
+                                tmp_end   = timex[0]
+                            else:                                # a default on remplit le start 
+                                tmp_start = timex[0]
+
+                result.start_travel_date=tmp_start
+                result.end_travel_date=tmp_end
+
+
+
+                
  ################### BUDGET 
                  
                 budget_entities = recognizer_result.entities.get("$instance", {}).get(

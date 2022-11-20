@@ -90,6 +90,13 @@ APP = web.Application(middlewares=[bot_telemetry_middleware, aiohttp_error_middl
 APP.router.add_post("/api/messages", messages)
 #print("message :", messages)
 
+# pour deploier sur azur !!!!
+def init_func(argv):
+    app = web.Application(middlewares=[bot_telemetry_middleware, aiohttp_error_middleware])
+    app.router.add_post("/api/messages", messages)
+    return app
+
+
 if __name__ == "__main__":
     try:
         web.run_app(APP, host="localhost", port=CONFIG.PORT)
